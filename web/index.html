@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security Operator Console</title>
+  <meta name="description" content="AI Security Operator Console">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="top-nav">
+    <div class="brand-section">
+      <div class="brand-logo">SO</div>
+      <div>
+        <div class="brand-title">Security Operator</div>
+        <div class="brand-subtitle">AI Assistant for Security Tasks</div>
+      </div>
+    </div>
+    <div class="nav-metrics">
+      <div class="metric-tag">
+        <span class="status-dot"></span>
+        <span>System Active</span>
+      </div>
+      <button onclick="resetSecOpsDB()" class="btn-refresh-erp" style="margin-left: 4px;">Reset Database</button>
+    </div>
+  </header>
+
+  <!-- 3-Column Operator Workspace -->
+  <main class="app-container">
+
+    <!-- Column 1: Objective Input -->
+    <section class="col-panel">
+      <div class="panel-header-bar">
+        <div class="panel-heading">Task Input</div>
+      </div>
+      <div class="panel-scroll-content">
+
+        <div style="margin-bottom: 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+          Enter a security task for the AI to perform. For example, you can ask it to remove a user's access, lock a device, or check security status.
+        </div>
+
+        <div class="input-group">
+          <label class="field-label" for="taskPrompt">What should the AI do?</label>
+          <textarea id="taskPrompt" class="goal-textarea" placeholder="e.g. Remove all access for Vikram Malhotra and lock his device..."></textarea>
+        </div>
+
+        <label class="checkbox-row">
+          <input type="checkbox" id="autoApproveToggle">
+          <span>Auto-approve tasks (Skip human review)</span>
+        </label>
+
+        <button id="runBtn" class="btn-run" onclick="executeTask()">
+          Start Task
+        </button>
+
+      </div>
+    </section>
+
+    <!-- Column 2: Pipeline & Action Steps -->
+    <section class="col-panel">
+      <div class="panel-header-bar">
+        <div class="panel-heading">AI Progress</div>
+        <div id="activeTaskId" style="font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary);">
+          Ready
+        </div>
+      </div>
+      <div class="panel-scroll-content">
+
+        <!-- Pipeline Breadcrumbs -->
+        <div class="pipeline-bar">
+          <div class="p-step" id="p-understand"><span class="p-num">1</span><span>Understand</span></div>
+          <span class="p-arrow">/</span>
+          <div class="p-step" id="p-plan"><span class="p-num">2</span><span>Plan</span></div>
+          <span class="p-arrow">/</span>
+          <div class="p-step" id="p-execute"><span class="p-num">3</span><span>Execute</span></div>
+          <span class="p-arrow">/</span>
+          <div class="p-step" id="p-observe"><span class="p-num">4</span><span>Check</span></div>
+          <span class="p-arrow">/</span>
+          <div class="p-step" id="p-adapt"><span class="p-num">5</span><span>Fix</span></div>
+          <span class="p-arrow">/</span>
+          <div class="p-step" id="p-verify"><span class="p-num">6</span><span>Verify</span></div>
+          <span class="p-arrow">/</span>
+          <div class="p-step" id="p-complete"><span class="p-num">7</span><span>Done</span></div>
+        </div>
+
+        <!-- Human-in-the-Loop Alert Banner -->
+        <div id="hitlAlert" class="hitl-alert">
+          <div class="hitl-alert-title" id="hitlTitle">Approval Required</div>
+          <div class="hitl-alert-desc" id="hitlDesc">
+            This task requires human approval before continuing.
+          </div>
+          <div class="hitl-btn-group">
+            <button class="btn-authorize" onclick="resolveHITL(true)">Approve</button>
+            <button class="btn-reject" onclick="resolveHITL(false)">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Step Execution List -->
+        <div class="panel-heading" style="margin-bottom: 12px;">Steps</div>
+        <div id="stepStream" class="step-stream">
+          <div style="font-size: 12px; color: var(--text-tertiary); text-align: center; padding: 40px 0;">
+            Waiting for a task to start...
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Column 3: Data & Logs -->
+    <section class="col-panel">
+      <div class="tabs-nav">
+        <button class="tab-link active" onclick="switchTab('posture')">Security Data</button>
+        <button class="tab-link" onclick="switchTab('policies')">Policies</button>
+        <button class="tab-link" onclick="switchTab('verify')">Verification</button>
+        <button class="tab-link" onclick="switchTab('audit')">Logs</button>
+      </div>
+      <div class="panel-scroll-content">
+
+        <!-- Tab 1: Live Security Data -->
+        <div id="tab-posture" class="tab-pane active">
+
+          <!-- Task Result Card -->
+          <div class="settlement-card" id="revocationCard">
+            <div class="settlement-header">
+              <div class="settlement-header-left">
+                <span class="settlement-tag">LATEST RESULT</span>
+                <span class="settlement-status-badge" id="revocationStatusBadge">Status: Good</span>
+              </div>
+              <div class="settlement-timestamp" id="revocationTimestamp">Live Data</div>
+            </div>
+
+            <div class="settlement-body">
+              <div class="settlement-vendor-row">
+                <div class="settlement-vendor-col">
+                  <div class="settlement-vendor-name" id="revocationTargetName">Target User</div>
+                  <div class="settlement-meta" id="revocationTargetMeta">Details</div>
+                </div>
+                <div class="settlement-amount-box">
+                  <div class="settlement-amount-label">ACTIVE ACCESS</div>
+                  <div class="settlement-amount-val" id="activePrivilegesCount" style="color: var(--accent-green);">0</div>
+                </div>
+              </div>
+
+              <div class="settlement-proof-bar">
+                <div class="proof-pill">
+                  <span class="proof-dot green"></span>
+                  <span id="proofSsoText">Accounts: Checked</span>
+                </div>
+                <div class="proof-pill">
+                  <span class="proof-dot blue"></span>
+                  <span id="proofDeviceText">Devices: Checked</span>
+                </div>
+                <button class="btn-inspect-proof" onclick="switchTab('verify')">View Checks →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Summary Bar -->
+          <div class="ledger-balance-bar" id="postureSummaryBar">
+            <div class="bal-col">
+              <span class="bal-label">CLOUD KEYS</span>
+              <span class="bal-val" id="metricCloudKeys" style="color: var(--accent-amber);">0</span>
+            </div>
+            <div class="bal-col-divider"></div>
+            <div class="bal-col">
+              <span class="bal-label">ACTIVE SESSIONS</span>
+              <span class="bal-val" id="metricSsoSessions" style="color: var(--accent-indigo);">0</span>
+            </div>
+            <div class="bal-col-divider"></div>
+            <div class="bal-col">
+              <span class="bal-label">UNLOCKED DEVICES</span>
+              <span class="bal-val" id="metricUnlockedDevices" style="color: var(--text-primary);">0</span>
+            </div>
+            <div class="bal-status-pill" id="postureStatusPill">
+              <span class="status-indicator-dot"></span>
+              <span id="postureStatusText">SECURE</span>
+            </div>
+          </div>
+
+          <!-- Section 1: Employee Directory -->
+          <div class="section-subheading-row">
+            <span class="section-subheading">Employee Directory</span>
+            <button onclick="fetchSecOpsData()" class="btn-refresh-erp">Refresh</button>
+          </div>
+
+          <table class="enterprise-table" id="employeesTable">
+            <thead>
+              <tr>
+                <th style="width: 25%;">Name</th>
+                <th style="width: 33%;">Role</th>
+                <th style="width: 22%; text-align: center;">Risk Level</th>
+                <th style="width: 20%; text-align: center;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="4">Loading employees...</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Section 2: Active SSO Sessions -->
+          <div class="section-subheading-row" style="margin-top: 20px;">
+            <span class="section-subheading">Active Login Sessions</span>
+          </div>
+
+          <table class="enterprise-table" id="ssoSessionsTable">
+            <thead>
+              <tr>
+                <th style="width: 25%;">Session ID</th>
+                <th style="width: 20%;">System</th>
+                <th style="width: 35%;">IP &amp; User</th>
+                <th style="width: 20%; text-align: center;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="4">Loading login sessions...</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Section 3: Cloud IAM Credentials -->
+          <div class="section-subheading-row" style="margin-top: 20px;">
+            <span class="section-subheading">Cloud Access Keys</span>
+          </div>
+
+          <table class="enterprise-table" id="cloudKeysTable">
+            <thead>
+              <tr>
+                <th style="width: 20%;">Key ID</th>
+                <th style="width: 20%;">Cloud</th>
+                <th style="width: 40%;">Assigned User</th>
+                <th style="width: 20%; text-align: center;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="4">Loading cloud keys...</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Section 4: Source Code Repository Access -->
+          <div class="section-subheading-row" style="margin-top: 20px;">
+            <span class="section-subheading">Source Code Repositories</span>
+          </div>
+
+          <table class="enterprise-table" id="repoAccessTable">
+            <thead>
+              <tr>
+                <th style="width: 25%;">Access ID</th>
+                <th style="width: 20%;">Platform</th>
+                <th style="width: 35%;">Team</th>
+                <th style="width: 20%; text-align: center;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="4">Loading repository access...</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Section 5: Workstation MDM Fleet -->
+          <div class="section-subheading-row" style="margin-top: 20px;">
+            <span class="section-subheading">Devices</span>
+          </div>
+
+          <table class="enterprise-table" id="devicesTable">
+            <thead>
+              <tr>
+                <th style="width: 25%;">Device ID</th>
+                <th style="width: 35%;">Model</th>
+                <th style="width: 20%;">User</th>
+                <th style="width: 20%; text-align: center;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="4">Loading devices...</td>
+              </tr>
+            </tbody>
+          </table>
+
+        </div>
+
+        <!-- Tab 2: Policies -->
+        <div id="tab-policies" class="tab-pane">
+          <div class="section-subheading" style="margin-bottom: 10px;">
+            Security Policies
+          </div>
+          <div id="policyViewer"
+            style="font-family: var(--font-mono); font-size: 11px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); padding: 14px; border-radius: var(--radius-md); color: var(--text-secondary); max-height: 520px; overflow-y: auto;">
+            Loading policies...
+          </div>
+        </div>
+
+        <!-- Tab 3: Verification -->
+        <div id="tab-verify" class="tab-pane">
+          <div class="section-subheading" style="margin-bottom: 10px;">
+            System Checks
+          </div>
+          <div id="verifyChecklist" class="assertion-list">
+            <div style="font-size: 12px; color: var(--text-tertiary);">No checks recorded yet.</div>
+          </div>
+        </div>
+
+        <!-- Tab 4: Audit Logs -->
+        <div id="tab-audit" class="tab-pane">
+          <div class="terminal-stream" id="auditStream"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Live Execution Splash Overlay -->
+  <div id="workflowSplash" class="splash-backdrop">
+    <div class="splash-card">
+      <div class="splash-header">
+        <div class="splash-header-left">
+          <div class="splash-spinner" id="splashSpinner"></div>
+          <div>
+            <div class="splash-title" id="splashTitle">Task In Progress</div>
+            <div class="splash-subtitle" id="splashSubtitle">AI is working on it...</div>
+          </div>
+        </div>
+        <div class="splash-pct" id="splashPct">0%</div>
+      </div>
+
+      <!-- Linear Progress Bar -->
+      <div class="splash-progress-track">
+        <div class="splash-progress-fill" id="splashProgressFill"></div>
+      </div>
+
+      <!-- Current Operation Box -->
+      <div class="splash-current-op">
+        <div class="op-label">CURRENT STEP</div>
+        <div class="op-message" id="splashOpMessage">Starting up...</div>
+        <div class="op-meta" id="splashOpMeta">Phase: STARTING</div>
+      </div>
+
+      <!-- Real-Time Process Steps Feed -->
+      <div class="splash-process-list" id="splashProcessList"></div>
+
+      <!-- In-Splash Policy Escalation Prompt -->
+      <div id="splashHitlPrompt" class="splash-hitl-box">
+        <div class="splash-hitl-title">Approval Needed</div>
+        <div class="splash-hitl-body" id="splashHitlBody">
+          This task requires approval to proceed.
+        </div>
+        <div class="splash-hitl-actions">
+          <button class="btn-authorize" onclick="resolveHITL(true)">Approve Task</button>
+          <button class="btn-reject" onclick="resolveHITL(false)">Cancel Task</button>
+        </div>
+      </div>
+
+      <!-- Completion Footer -->
+      <div id="splashCompletionFooter" class="splash-footer" style="display: none;">
+        <div class="splash-footer-summary" id="splashCompletionSummary">
+          Task completed and checked.
+        </div>
+        <button class="btn-dismiss" onclick="closeSplashScreen()">View Results</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+
+</html>

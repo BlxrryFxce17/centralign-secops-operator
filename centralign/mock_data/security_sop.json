@@ -1,0 +1,72 @@
+{
+  "organization_name": "CentrAlign Technologies India Pvt. Ltd.",
+  "security_framework": "SOC2 Type II & ISO 27001:2022 Certified",
+  "security_policies": {
+    "zero_trust_policy": "Any terminated or compromised employee credentials must be fully revoked across Identity, Cloud IAM, VCS, and MDM within 15 minutes of trigger.",
+    "escalation_thresholds": {
+      "require_ciso_approval_roles": ["Lead DevOps Architect", "VP Engineering", "Head of Infrastructure", "Principal Security Engineer"],
+      "require_ciso_approval_privileges": ["AdministratorAccess", "OrganizationOwner", "ProductionRoot"],
+      "destructive_actions_requiring_human_approval": ["remote_wipe_device", "revoke_root_iam"]
+    },
+    "compliance_retention": "All revocation actions must produce immutable SHA-256 cryptographic audit logs stored for 7 years."
+  },
+  "employee_directory": {
+    "EMP-SEC-901": {
+      "full_name": "Vikram Malhotra",
+      "email": "vikram.malhotra@centralign.corp",
+      "department": "Cloud Infrastructure & SRE",
+      "role": "Lead DevOps Architect",
+      "risk_tier": "CRITICAL",
+      "cloud_privilege": "AdministratorAccess",
+      "device_id": "DEV-MAC-2041",
+      "github_handle": "vmalhotra-infra",
+      "notes": "Has root access to production AWS multi-account org. Requires CISO authorization."
+    },
+    "EMP-SEC-902": {
+      "full_name": "Priya Sundaram",
+      "email": "priya.sundaram@centralign.corp",
+      "department": "Core Product Engineering",
+      "role": "Senior Backend Engineer",
+      "risk_tier": "STANDARD",
+      "cloud_privilege": "PowerUserAccess",
+      "device_id": "DEV-MAC-2042",
+      "github_handle": "priya-backend",
+      "notes": "Standard departure. Autonomous offboarding authorized under SOC2 Fast-Path."
+    },
+    "EMP-SEC-903": {
+      "full_name": "Arjun Mehta",
+      "email": "arjun.mehta@centralign.corp",
+      "department": "Financial Systems & Payments",
+      "role": "Staff Platform Engineer",
+      "risk_tier": "CRITICAL",
+      "cloud_privilege": "AdministratorAccess",
+      "device_id": "DEV-WIN-1092",
+      "github_handle": "arjun-fintech",
+      "notes": "High-privilege access to payment reconciliation pipelines. Requires CISO authorization."
+    },
+    "EMP-SEC-904": {
+      "full_name": "Ananya Roy",
+      "email": "ananya.roy@centralign.corp",
+      "department": "Frontend & Design Engineering",
+      "role": "Product Engineer",
+      "risk_tier": "STANDARD",
+      "cloud_privilege": "ReadOnly",
+      "device_id": "DEV-MAC-2045",
+      "github_handle": "ananya-ui",
+      "notes": "Standard contractor transition. Auto-approved fast path."
+    }
+  },
+  "standard_operating_procedures": {
+    "emergency_employee_offboarding": [
+      "1. Retrieve employee security profile, active credentials, and risk tier from identity directory.",
+      "2. Query SIEM / Threat Intel gateway for compromised indicators (with adaptive rate limit recovery).",
+      "3. Enforce SOC2 Gatekeeper: If role is CRITICAL (e.g. Lead DevOps Architect) or holds AdministratorAccess, halt for CISO sign-off.",
+      "4. Terminate active Identity Provider (Okta/Google Workspace) SSO sessions and reset MFA tokens.",
+      "5. Revoke Cloud IAM access keys (AWS/GCP), detach policies, and invalidate active STS tokens.",
+      "6. Remove from GitHub Enterprise organization and revoke repository write access.",
+      "7. Send MDM remote lock signal to corporate workstation and revoke VPN certificates.",
+      "8. Execute out-of-band ground-truth verification asserting 0 active sessions, 0 keys, and device locked.",
+      "9. Emit signed compliance certificate artifact to disk."
+    ]
+  }
+}
