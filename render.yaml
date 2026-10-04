@@ -1,7 +1,7 @@
 services:
   - type: web
     name: centralign-secops-operator
-    env: docker
+    runtime: docker
     region: ohio
     plan: free
     branch: master
