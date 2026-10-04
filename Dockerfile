@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Initialize the mock database
-RUN python -c "from centralign.runtime.verifier import TaskVerifier; TaskVerifier().reset_security_database()"
+RUN python -c "from centralign.tools.secops_systems import reset_security_database; reset_security_database()"
 
 # Expose the port
 EXPOSE 8000
