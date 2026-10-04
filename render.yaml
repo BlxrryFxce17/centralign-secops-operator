@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: centralign-secops-operator
+    env: docker
+    region: ohio
+    plan: free
+    branch: master
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
